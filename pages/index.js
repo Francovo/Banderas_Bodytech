@@ -10,40 +10,77 @@ import {
 import { React, useState, useEffect } from "react";
 import axios from "axios";
 import { BsFillSunFill, BsCloudMoonFill, BsSearch } from "react-icons/bs";
-import Detalles from "./Detalles";
 import Link from "next/link";
 
 const Home = () => {
-  const [data, setData] = useState([]);
+  //Cambio de color de la pagina
   const { colorMode, toggleColorMode } = useColorMode();
   const color = useColorModeValue("black", "black");
-  const [busqueda, setBusqueda] = useState("");
-  const [continente, setContinente] = useState("");
-  // const [idPais, setidPais] = useState('');
 
-  //Handle Change del pais a ingresar (Input)
-  const handleChangeInput = (e) => {
-    setBusqueda(e.target.value);
-  };
+  //******************* */
+  const [data, setData] = useState([]);
+  const [dataFiltrada, setDataFiltrada] = useState([]);
+  const [continente, setContinente] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [indexPagination, setindexPagination] = useState(40);
 
   //Handle Change del continente del Option
   const handleChangeContinente = (e) => {
-    setContinente(e.target.value);
-    console.log(continente);
+    if (e.target.value === "Continente") {
+      setDataFiltrada(data);
+      setContinente("");
+    } else {
+      const filtroSelect = data.filter((continente) => {
+        return continente.region.startsWith(e.target.value);
+      });
+      setDataFiltrada(filtroSelect);
+      setContinente(e.target.value);
+    }
+  };
+
+  //Handle Change del pais a ingresar (Input)
+  const handleChangeInput = (e) => {
+    let filtroInput = [];
+
+    if (continente) {
+      filtroInput = data
+        .filter((pais) => {
+          return pais.region === continente;
+        })
+        .filter((pais) => {
+          return pais.name
+            .toLowerCase()
+            .startsWith(e.target.value.toLowerCase());
+        });
+    } else {
+      filtroInput = data.filter((pais) => {
+        return pais.name.toLowerCase().startsWith(e.target.value.toLowerCase());
+      });
+    }
+
+    setDataFiltrada(filtroInput);
+    setBusqueda(e.target.value);
+  };
+
+  //Paginacion
+  const handlePagination = () => {
+    setindexPagination(indexPagination + 40);
   };
 
   useEffect(() => {
     axios
-      .get(
-        `https://restcountries.com/v2/${busqueda ? `name/${busqueda}` : "all"}`
-      )
+      .get(`https://restcountries.com/v2/all`)
       .then((response) => {
+        // let newArreglo = filtroArreglo.filter((item, index) => {
+        //   return index <= 50
+        // })
+        setDataFiltrada(response.data);
         setData(response.data);
       })
       .catch((error) => {
-        alert("La peticion no tuvo exito", error);
+        console.log("La peticion no tuvo exito", error);
       });
-  }, [busqueda]);
+  }, [indexPagination]);
 
   return (
     <Box>
@@ -86,11 +123,11 @@ const Home = () => {
           onChange={handleChangeContinente}
         >
           <option value="Continente">Continente</option>
+          <option value="Polar">Polar</option>
           <option value="Africa">Africa</option>
-          <option value="Antartida">Antartida</option>
-          <option value="America">America</option>
+          <option value="Americas">Americas</option>
           <option value="Asia">Asia</option>
-          <option value="Europa">Europa</option>
+          <option value="Europe">Europa</option>
           <option value="Oceania">Oceania</option>
         </Select>
       </Box>
@@ -105,7 +142,8 @@ const Home = () => {
         gap="1.5rem"
         padding="2rem"
       >
-        {data.map((paises, index) => (
+        {/* Paginacion mas Mapeo de datos */}
+        {dataFiltrada.slice(0, indexPagination).map((paises, index) => (
           <Box
             key={`pais-${index}`}
             boxShadow="dark-lg"
@@ -120,18 +158,15 @@ const Home = () => {
               height="fit-content"
               display="flex"
               flexDirection="column"
-              onClick={() => {
-                <Detalles datos={data} />;
-              }}
+              onClick={() => {}}
             >
-              <Link href="/Detalles">
-                <a>
-                  {" "}
-                  <Box
-                    width="100%"
-                    align="left"
-                    padding="0.5rem 1rem 1rem 1rem"
-                  >
+              <Link href={`/pais/${paises.name}`}>
+                <a
+                  style={{
+                    width: "100%",
+                  }}
+                >
+                  <Box align="left" padding="0.5rem 1rem 1rem 1rem">
                     <Box margin="0 0 1rem 0" backgroundColor="transparent">
                       <mark>{paises.name}</mark>
                     </Box>
@@ -150,12 +185,21 @@ const Home = () => {
                         {paises.capital}
                       </Box>
                     </Box>
-                  </Box>{" "}
+                  </Box>
                 </a>
               </Link>
             </Button>
           </Box>
         ))}
+        <Box backgroundColor="transparent">
+          {dataFiltrada.slice(indexPagination).length < dataFiltrada.length ? (
+            <Button colorScheme="linkedin" onClick={handlePagination}>
+              Mostrar más...
+            </Button>
+          ) : (
+            <></>
+          )}
+        </Box>
       </Box>
     </Box>
   );
