@@ -60,7 +60,6 @@ const Detalles = () => {
         <Box
           key={`pais-${index}`}
           display="flex"
-          margin="11rem 30rem"
           backgroundColor="black"
         >
           <Box>
