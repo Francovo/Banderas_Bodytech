@@ -113,7 +113,6 @@ const Home = () => {
             backgroundColor="transparent"
           >
             <Img src={paises.flag} width="15rem" height="10rem" />
-            {/* Se utiliza codigo numerico del pais en el array como key del button */}
             <Button
               key={paises.id}
               width="100%"
